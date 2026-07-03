@@ -1,0 +1,52 @@
+version: '3.9'
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-taskplatform}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-taskplatform}
+      POSTGRES_DB: ${POSTGRES_DB:-taskplatform}
+    ports:
+      - '5432:5432'
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U taskplatform']
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  identity-service:
+    build:
+      context: ./identity-service
+      dockerfile: Dockerfile
+    ports:
+      - '3001:3001'
+    environment:
+      DATABASE_URL: postgresql://${POSTGRES_USER:-taskplatform}:${POSTGRES_PASSWORD:-taskplatform}@postgres:5432/${POSTGRES_DB:-taskplatform}_identity
+      JWT_SECRET: ${JWT_SECRET:-changeme-in-production}
+      JWT_EXPIRY: ${JWT_EXPIRY:-1h}
+      PORT: 3001
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+  task-service:
+    build:
+      context: ./task-service
+      dockerfile: Dockerfile
+    ports:
+      - '3002:3002'
+    environment:
+      DATABASE_URL: postgresql://${POSTGRES_USER:-taskplatform}:${POSTGRES_PASSWORD:-taskplatform}@postgres:5432/${POSTGRES_DB:-taskplatform}_tasks
+      JWT_SECRET: ${JWT_SECRET:-changeme-in-production}
+      PORT: 3002
+    depends_on:
+      postgres:
+        condition: service_healthy
+      identity-service:
+        condition: service_started
+
+volumes:
+  postgres_data:
