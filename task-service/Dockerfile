@@ -1,6 +1,7 @@
 FROM node:20-alpine AS builder
 WORKDIR /app
 COPY package*.json ./
+COPY prisma ./prisma
 RUN npm ci
 COPY . .
 RUN npm run build
@@ -8,7 +9,8 @@ RUN npm run build
 FROM node:20-alpine AS runtime
 WORKDIR /app
 COPY package*.json ./
+COPY prisma ./prisma
 RUN npm ci --omit=dev
 COPY --from=builder /app/dist ./dist
 EXPOSE 3002
-CMD ["node", "dist/infrastructure/server.js"]
+CMD ["sh", "-c", "npx prisma migrate deploy && node dist/infrastructure/server.js"]
