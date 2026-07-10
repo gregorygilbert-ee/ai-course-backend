@@ -76,10 +76,7 @@ npx vitest run tests/unit/RegisterUser.test.ts
 
 ## Known Gaps (Work in Progress)
 
-- **No Prisma adapters yet** — `PrismaUserRepository` and `PrismaTaskRepository` don't exist; both `infrastructure/server.ts` files have `// TODO` comments and use `InMemoryXRepository` everywhere including in docker-compose.
-- **No Prisma schema** — `prisma/schema.prisma` doesn't exist in either service yet.
 - **OpenAPI not wired** — `@fastify/swagger` and `@fastify/swagger-ui` are installed but not registered in either `server.ts`.
-- **Auth middleware bypasses port** — `task-service/src/adapters/http/authMiddleware.ts` verifies JWTs inline with `jsonwebtoken` rather than through a port interface, which is an architecture inconsistency.
 
 ## Prompting Strategy (AI-in-SDLC)
 
