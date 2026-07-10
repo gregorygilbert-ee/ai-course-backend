@@ -7,6 +7,7 @@ COPY . .
 RUN npm run build
 
 FROM node:20-alpine AS runtime
+RUN apk add --no-cache openssl
 WORKDIR /app
 COPY package*.json ./
 COPY prisma ./prisma
