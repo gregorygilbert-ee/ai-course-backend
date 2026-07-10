@@ -3,6 +3,7 @@ import Fastify from 'fastify';
 import jwt from 'jsonwebtoken';
 import { CreateTask, GetTasks, UpdateTask, DeleteTask } from '../../src/application/use-cases/TaskUseCases';
 import { InMemoryTaskRepository } from '../../src/adapters/persistence/InMemoryTaskRepository';
+import { JwtTokenVerifier } from '../../src/adapters/JwtTokenVerifier';
 import { registerRoutes } from '../../src/adapters/http/routes';
 
 const JWT_SECRET = 'test-secret-at-least-32-characters!!';
@@ -18,7 +19,7 @@ function buildApp() {
     getTasks: new GetTasks(repo),
     updateTask: new UpdateTask(repo),
     deleteTask: new DeleteTask(repo),
-    jwtSecret: JWT_SECRET,
+    tokenVerifier: new JwtTokenVerifier(JWT_SECRET),
   });
   return app;
 }

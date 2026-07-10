@@ -5,6 +5,7 @@ import { CreateTask, GetTasks, UpdateTask, DeleteTask } from '../application/use
 import { PrismaTaskRepository } from '../adapters/persistence/PrismaTaskRepository';
 import { InMemoryTaskRepository } from '../adapters/persistence/InMemoryTaskRepository';
 import { TaskRepository } from '../ports/outbound/TaskRepository';
+import { JwtTokenVerifier } from '../adapters/JwtTokenVerifier';
 import { registerRoutes } from '../adapters/http/routes';
 
 const taskRepository: TaskRepository = process.env.DATABASE_URL
@@ -21,7 +22,7 @@ registerRoutes(app, {
   getTasks: new GetTasks(taskRepository),
   updateTask: new UpdateTask(taskRepository),
   deleteTask: new DeleteTask(taskRepository),
-  jwtSecret,
+  tokenVerifier: new JwtTokenVerifier(jwtSecret),
 });
 
 app.listen({ port, host: '0.0.0.0' }, (err) => {

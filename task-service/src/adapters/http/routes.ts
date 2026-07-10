@@ -1,5 +1,6 @@
 import { FastifyInstance } from 'fastify';
 import { CreateTask, GetTasks, UpdateTask, DeleteTask, TaskNotFoundError } from '../../application/use-cases/TaskUseCases';
+import { TokenVerifier } from '../../ports/outbound/TokenVerifier';
 import { createAuthMiddleware } from './authMiddleware';
 
 export function registerRoutes(
@@ -9,10 +10,10 @@ export function registerRoutes(
     getTasks: GetTasks;
     updateTask: UpdateTask;
     deleteTask: DeleteTask;
-    jwtSecret: string;
+    tokenVerifier: TokenVerifier;
   },
 ) {
-  const authMiddleware = createAuthMiddleware(deps.jwtSecret);
+  const authMiddleware = createAuthMiddleware(deps.tokenVerifier);
 
   app.addHook('preHandler', authMiddleware);
 

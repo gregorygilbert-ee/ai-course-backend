@@ -1,5 +1,5 @@
 import { FastifyRequest, FastifyReply } from 'fastify';
-import jwt from 'jsonwebtoken';
+import { TokenVerifier } from '../../ports/outbound/TokenVerifier';
 
 export interface AuthenticatedUser {
   id: string;
@@ -12,7 +12,7 @@ declare module 'fastify' {
   }
 }
 
-export function createAuthMiddleware(jwtSecret: string) {
+export function createAuthMiddleware(tokenVerifier: TokenVerifier) {
   return async function authMiddleware(request: FastifyRequest, reply: FastifyReply) {
     const authHeader = request.headers.authorization;
     if (!authHeader?.startsWith('Bearer ')) {
@@ -20,7 +20,7 @@ export function createAuthMiddleware(jwtSecret: string) {
     }
     const token = authHeader.slice(7);
     try {
-      const payload = jwt.verify(token, jwtSecret) as { sub: string; email: string };
+      const payload = tokenVerifier.verify(token);
       request.user = { id: payload.sub, email: payload.email };
     } catch {
       return reply.status(401).send({ error: 'Invalid or expired token' });
