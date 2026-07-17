@@ -92,6 +92,25 @@ Follow TDD order strictly in prompts:
 - **Refactor prompt:** "Refactor this to ensure the domain layer has no imports outside its own folder"
 - **Security prompt:** "Review this JWT handling for security issues and suggest fixes"
 
+## Linear (Issue Tracking)
+
+Issues are tracked in Linear. The GitHub integration is enabled, so Linear auto-links branches and PRs to issues.
+
+**Branch naming** — use the branch name Linear generates (click "Copy git branch name" on an issue):
+```
+feat/LIN-123-short-description
+fix/LIN-123-short-description
+chore/LIN-123-short-description
+```
+
+**Commit messages** — prefix with the Linear issue ID so Linear auto-attaches the commit:
+```
+feat: add task pagination [LIN-123]
+fix: correct JWT expiry header [LIN-45]
+```
+
+When you open a PR, Linear will automatically detect the branch name or commit ID and link the PR to the issue, moving it to "In Review".
+
 ## Environment Variables
 
 See `.env.example` in each service. Never commit `.env` files.
