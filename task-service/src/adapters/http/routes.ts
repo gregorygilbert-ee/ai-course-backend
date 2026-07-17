@@ -3,6 +3,27 @@ import { CreateTask, GetTasks, UpdateTask, DeleteTask, TaskNotFoundError } from 
 import { TokenVerifier } from '../../ports/outbound/TokenVerifier';
 import { createAuthMiddleware } from './authMiddleware';
 
+const taskSchema = {
+  type: 'object',
+  properties: {
+    id: { type: 'string' },
+    userId: { type: 'string' },
+    title: { type: 'string' },
+    description: { type: 'string' },
+    dueDate: { type: 'string', format: 'date-time', nullable: true },
+    isCompleted: { type: 'boolean' },
+    createdAt: { type: 'string', format: 'date-time' },
+    updatedAt: { type: 'string', format: 'date-time' },
+  },
+};
+
+const errorSchema = {
+  type: 'object',
+  properties: {
+    error: { type: 'string' },
+  },
+};
+
 export function registerRoutes(
   app: FastifyInstance,
   deps: {
@@ -17,7 +38,25 @@ export function registerRoutes(
 
   app.addHook('preHandler', authMiddleware);
 
-  app.post('/tasks', async (request, reply) => {
+  app.post('/tasks', {
+    schema: {
+      summary: 'Create a task',
+      tags: ['Tasks'],
+      body: {
+        type: 'object',
+        required: ['title', 'description'],
+        properties: {
+          title: { type: 'string', maxLength: 255 },
+          description: { type: 'string' },
+          dueDate: { type: 'string', format: 'date-time' },
+        },
+      },
+      response: {
+        201: taskSchema,
+        401: errorSchema,
+      },
+    },
+  }, async (request, reply) => {
     const userId = request.user!.id;
     const { title, description, dueDate } = request.body as {
       title: string;
@@ -33,12 +72,46 @@ export function registerRoutes(
     return reply.status(201).send(task);
   });
 
-  app.get('/tasks', async (request, reply) => {
+  app.get('/tasks', {
+    schema: {
+      summary: 'List all tasks for the authenticated user',
+      tags: ['Tasks'],
+      response: {
+        200: { type: 'array', items: taskSchema },
+        401: errorSchema,
+      },
+    },
+  }, async (request, reply) => {
     const tasks = await deps.getTasks.execute(request.user!.id);
     return reply.send(tasks);
   });
 
-  app.put('/tasks/:id', async (request, reply) => {
+  app.put('/tasks/:id', {
+    schema: {
+      summary: 'Update a task',
+      tags: ['Tasks'],
+      params: {
+        type: 'object',
+        properties: {
+          id: { type: 'string' },
+        },
+      },
+      body: {
+        type: 'object',
+        properties: {
+          title: { type: 'string', maxLength: 255 },
+          description: { type: 'string' },
+          dueDate: { type: 'string', format: 'date-time', nullable: true },
+          isCompleted: { type: 'boolean' },
+        },
+      },
+      response: {
+        200: taskSchema,
+        401: errorSchema,
+        404: errorSchema,
+      },
+    },
+  }, async (request, reply) => {
     const { id } = request.params as { id: string };
     const userId = request.user!.id;
     const body = request.body as {
@@ -61,7 +134,23 @@ export function registerRoutes(
     }
   });
 
-  app.delete('/tasks/:id', async (request, reply) => {
+  app.delete('/tasks/:id', {
+    schema: {
+      summary: 'Delete a task',
+      tags: ['Tasks'],
+      params: {
+        type: 'object',
+        properties: {
+          id: { type: 'string' },
+        },
+      },
+      response: {
+        204: { type: 'null' },
+        401: errorSchema,
+        404: errorSchema,
+      },
+    },
+  }, async (request, reply) => {
     const { id } = request.params as { id: string };
     try {
       await deps.deleteTask.execute(id, request.user!.id);

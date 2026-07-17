@@ -4,6 +4,22 @@ import { LoginUser, InvalidCredentialsError } from '../../application/use-cases/
 import { GetAuthenticatedUser } from '../../application/use-cases/GetAuthenticatedUser';
 import { JwtTokenService, InvalidTokenError } from '../JwtTokenService';
 
+const userSchema = {
+  type: 'object',
+  properties: {
+    id: { type: 'string' },
+    email: { type: 'string' },
+    createdAt: { type: 'string', format: 'date-time' },
+  },
+};
+
+const errorSchema = {
+  type: 'object',
+  properties: {
+    error: { type: 'string' },
+  },
+};
+
 export function registerRoutes(
   app: FastifyInstance,
   deps: {
@@ -13,7 +29,24 @@ export function registerRoutes(
     tokenService: JwtTokenService;
   },
 ) {
-  app.post('/register', async (request, reply) => {
+  app.post('/register', {
+    schema: {
+      summary: 'Register a new user',
+      tags: ['Auth'],
+      body: {
+        type: 'object',
+        required: ['email', 'password'],
+        properties: {
+          email: { type: 'string', format: 'email' },
+          password: { type: 'string', minLength: 8 },
+        },
+      },
+      response: {
+        201: userSchema,
+        409: errorSchema,
+      },
+    },
+  }, async (request, reply) => {
     const { email, password } = request.body as { email: string; password: string };
     try {
       const result = await deps.registerUser.execute({ email, password });
@@ -26,7 +59,29 @@ export function registerRoutes(
     }
   });
 
-  app.post('/login', async (request, reply) => {
+  app.post('/login', {
+    schema: {
+      summary: 'Login and receive a JWT',
+      tags: ['Auth'],
+      body: {
+        type: 'object',
+        required: ['email', 'password'],
+        properties: {
+          email: { type: 'string', format: 'email' },
+          password: { type: 'string' },
+        },
+      },
+      response: {
+        200: {
+          type: 'object',
+          properties: {
+            token: { type: 'string' },
+          },
+        },
+        401: errorSchema,
+      },
+    },
+  }, async (request, reply) => {
     const { email, password } = request.body as { email: string; password: string };
     try {
       const result = await deps.loginUser.execute({ email, password });
@@ -39,7 +94,17 @@ export function registerRoutes(
     }
   });
 
-  app.get('/me', async (request, reply) => {
+  app.get('/me', {
+    schema: {
+      summary: 'Get the authenticated user',
+      tags: ['Auth'],
+      security: [{ bearerAuth: [] }],
+      response: {
+        200: userSchema,
+        401: errorSchema,
+      },
+    },
+  }, async (request, reply) => {
     const authHeader = request.headers.authorization;
     if (!authHeader?.startsWith('Bearer ')) {
       return reply.status(401).send({ error: 'Missing or invalid Authorization header' });

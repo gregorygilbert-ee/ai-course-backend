@@ -74,9 +74,6 @@ npx vitest run tests/unit/RegisterUser.test.ts
 
 **Integration tests** use Fastify's `app.inject()` — no HTTP port binds and Supertest is not needed (ignore the `supertest` dependency). Real adapters (Argon2, JWT) are used. The task-service integration tests pre-sign a JWT at module level for reuse across test cases.
 
-## Known Gaps (Work in Progress)
-
-- **OpenAPI not wired** — `@fastify/swagger` and `@fastify/swagger-ui` are installed but not registered in either `server.ts`.
 
 ## Prompting Strategy (AI-in-SDLC)
 

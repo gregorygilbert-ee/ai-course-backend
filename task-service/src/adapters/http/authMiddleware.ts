@@ -14,6 +14,8 @@ declare module 'fastify' {
 
 export function createAuthMiddleware(tokenVerifier: TokenVerifier) {
   return async function authMiddleware(request: FastifyRequest, reply: FastifyReply) {
+    if (request.url.startsWith('/docs')) return;
+
     const authHeader = request.headers.authorization;
     if (!authHeader?.startsWith('Bearer ')) {
       return reply.status(401).send({ error: 'Missing or invalid Authorization header' });

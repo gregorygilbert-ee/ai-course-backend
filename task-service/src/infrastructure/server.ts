@@ -1,5 +1,7 @@
 import 'dotenv/config';
 import Fastify from 'fastify';
+import swagger from '@fastify/swagger';
+import swaggerUi from '@fastify/swagger-ui';
 import { PrismaClient } from '@prisma/client';
 import { CreateTask, GetTasks, UpdateTask, DeleteTask } from '../application/use-cases/TaskUseCases';
 import { PrismaTaskRepository } from '../adapters/persistence/PrismaTaskRepository';
@@ -17,19 +19,44 @@ const port = parseInt(process.env.PORT ?? '3002', 10);
 
 const app = Fastify({ logger: true });
 
-registerRoutes(app, {
-  createTask: new CreateTask(taskRepository),
-  getTasks: new GetTasks(taskRepository),
-  updateTask: new UpdateTask(taskRepository),
-  deleteTask: new DeleteTask(taskRepository),
-  tokenVerifier: new JwtTokenVerifier(jwtSecret),
-});
+const start = async () => {
+  await app.register(swagger, {
+    openapi: {
+      openapi: '3.0.3',
+      info: {
+        title: 'Task Service API',
+        description: 'Authenticated task CRUD',
+        version: '1.0.0',
+      },
+      components: {
+        securitySchemes: {
+          bearerAuth: {
+            type: 'http',
+            scheme: 'bearer',
+            bearerFormat: 'JWT',
+          },
+        },
+      },
+      security: [{ bearerAuth: [] }],
+    },
+  });
 
-app.listen({ port, host: '0.0.0.0' }, (err) => {
-  if (err) {
-    app.log.error(err);
-    process.exit(1);
-  }
+  await app.register(swaggerUi, { routePrefix: '/docs' });
+
+  registerRoutes(app, {
+    createTask: new CreateTask(taskRepository),
+    getTasks: new GetTasks(taskRepository),
+    updateTask: new UpdateTask(taskRepository),
+    deleteTask: new DeleteTask(taskRepository),
+    tokenVerifier: new JwtTokenVerifier(jwtSecret),
+  });
+
+  await app.listen({ port, host: '0.0.0.0' });
+};
+
+start().catch((err) => {
+  console.error(err);
+  process.exit(1);
 });
 
 export { app };
