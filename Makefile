@@ -1,4 +1,4 @@
-.PHONY: dev-identity dev-task test test-identity test-task coverage lint build docker-up docker-down docker-rebuild
+.PHONY: dev-identity dev-task test test-identity test-task coverage lint build audit docker-up docker-down docker-rebuild
 
 # Development
 dev-identity:
@@ -32,6 +32,11 @@ lint:
 build:
 	cd identity-service && npm run build
 	cd task-service && npm run build
+
+# Security
+audit:
+	cd identity-service && npm audit --audit-level=high
+	cd task-service && npm audit --audit-level=high
 
 # Docker
 docker-up:
